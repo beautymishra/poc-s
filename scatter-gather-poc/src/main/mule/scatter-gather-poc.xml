@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7cc0442a-7267-45bc-a419-adee9c8bc342" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="b4376eba-80c0-4934-be82-202a90359f52" >
+		<http:request-connection host="gorest.co.in" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="570f3f7c-9db4-440c-a6ba-6231e3db7a53" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="1234" database="librarydb-1" />
+	</db:config>
+	<flow name="scatter-gather-pocFlow" doc:id="a19dca99-e93d-4a70-84e1-3398ff28deec" >
+		<http:listener doc:name="Listener" doc:id="7f24f91c-cdb5-4c73-98e8-58e71d7fd85d" config-ref="HTTP_Listener_config" path="/scatterGather"/>
+		<logger level="INFO" doc:name="Flow Started" doc:id="333fb36e-9701-406d-8193-a017d4b5afa7" message='#["Before Starting Scatter gather time :: " ++ now() as String]'/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="dba6962c-ef73-4d08-aa90-7c3b2ecd127a" >
+			<route >
+				<try doc:name="Try" doc:id="2309bf84-0a46-49f7-a75e-b149cd262365" >
+					<http:request method="GET" doc:name="User Details" doc:id="8128ed1f-e48f-4f47-b5d4-e447f21cbbe5" config-ref="HTTP_Request_configuration" path="/public/v2/users" />
+					<ee:transform doc:name="Transform Message" doc:id="a9f531f2-b832-406e-9d2c-8b8e00777f37">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json 
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					<logger level="INFO" doc:name="Target 1 Time" doc:id="e3721947-10c0-4c6a-b19a-2c94fc764fc1" message='#["Target 1 time ::   " ++ now() as String]' />
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="db80cdd2-d5fa-424c-95ed-b090386b260d" >
+							<set-payload value='#["Error occured in target 1"]' doc:name="Set Payload" doc:id="3ac6b6af-3524-4f93-a549-e124f5500479" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</route>
+			<route >
+				<try doc:name="Try" doc:id="15ca45a2-a7d4-40af-998a-bc2f4c714fe4" >
+					<db:select doc:name="Get Author Details" doc:id="b5b558d3-7a6e-4c9f-8257-bc97823bf037" config-ref="Database_Config">
+					<db:sql><![CDATA[SELECT * FROM `librarydb-1`.author]]></db:sql>
+				</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="ddf00949-0972-448c-9d4b-af2c7ed79eb9">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					<logger level="INFO" doc:name="Target 2 Time " doc:id="fe69972a-8982-4b1c-8763-546f5694c024" message='#["Target 2 time ::   " ++ now() as String]' />
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="09bc374d-0045-4185-a75a-154a73b70a2a" >
+							<set-payload value='#["Error occured in target 2"]' doc:name="Set Payload" doc:id="ed248d35-2ba0-487d-807d-02282f2b3472" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="payload" doc:id="ce2c6d8e-43e2-46a3-ba92-2d80bfd53e8b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Flow Ended" doc:id="f8580cb4-a8ea-43e9-8dfd-9a5a475912bf" message='#["Before Starting Scatter gather time :: " ++ now() as String]'/>
+	</flow>
+</mule>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9dda16e5-a887-4158-a0ce-0060436a7bc8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="parallel-for-each-pocFlow" doc:id="1238b342-10e5-4825-8fe4-f2d95e04503b" >
+		<http:listener doc:name="Listener" doc:id="31b94ab8-4818-4ddf-88e8-bf3df2905e7e" path="/parallelForEach" config-ref="HTTP_Listener_config"/>
+		<set-variable value="#[output application/java --- []]" doc:name="Accumulator" doc:id="313d9ab8-817c-45b0-85a3-a200c6c54007" variableName="accumulator"/>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="5e5852e7-996d-4be4-a23f-549f2bb6a62a" collection="#[1 to 10]">
+			<logger level="INFO" doc:name="Logger" doc:id="3944f35c-3383-4156-8fa0-ef62d750f739" message="#[vars.accumulator]"/>
+			<logger level="INFO" doc:name="Logger" doc:id="7d8f635b-fded-41a6-8d79-5b6e3d739b8d" message='#["printing each item"++ payload]'/>
+			<set-variable value="#[output application/java --- vars.accumulator + payload]" doc:name="Accumulator" doc:id="958999c9-2bee-4cae-b8ae-e4417f253019" variableName="accumulator"/>
+			<set-variable value="#[payload]" doc:name="Local" doc:id="2b253a04-07a0-4dce-8bda-25731ee1d512" variableName="local"/>
+		</parallel-foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="36c183e3-d61a-4ddc-8cba-279934b1f222" message="#[output application/json --- payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d6057b55-fe38-4c55-8106-0c812beb45b5" message="#[vars.accumulator]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="30163cdd-b2bc-49e1-8f90-5d0846213126" message="#[vars.local]"/>
+		<ee:transform doc:name="Transform Message" doc:id="9fe58fe1-25c9-4455-bf57-6bd43d9ee1c4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

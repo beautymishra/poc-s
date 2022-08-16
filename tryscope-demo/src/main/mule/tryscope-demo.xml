@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b41ed5e8-9b72-45e7-b590-7c3675d24f1e" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="tryscope-demoFlow" doc:id="54392aa4-ff56-4713-ad58-26a46fa9cb15" >
+		<http:listener doc:name="Listener" doc:id="d5e066c0-73f3-4516-83b0-9b8ba582a26f" config-ref="HTTP_Listener_config" path="/tryscope"/>
+		<try doc:name="Try" doc:id="1db93c42-a62a-4840-b694-7acebfd4ef3a" >
+			<logger level="INFO" doc:name="Logger" doc:id="b0111dbd-a155-45b4-8f76-986182dcec08" message="Logger inside try scope"/>
+			<raise-error doc:name="Raise error" doc:id="749c7d9a-3085-4939-97b9-4ea1263d2d1e" type="MULE:EXPRESSION"/>
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1818db80-ad08-4e46-ac4c-3ec8040810bb" >
+					<logger level="INFO" doc:name="Logger" doc:id="a728d1b3-52e7-443e-adde-cd72eabe207b" message="on error inside try scope "/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="6bb3664c-b8e0-4032-ae56-73c658c29db4" message="logger outside try scope"/>
+	</flow>
+</mule>
